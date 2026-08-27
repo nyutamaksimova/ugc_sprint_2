@@ -21,11 +21,16 @@ async def lifespan(app: FastAPI):
     client.close()
 
 
-def create_app() -> FastAPI:
+def create_app(*, lifespan_context=lifespan) -> FastAPI:
     from src.core.config import settings
 
     init_sentry(dsn=settings.sentry_dsn, environment=settings.sentry_environment)
-    app = FastAPI(title="UGC service", version="1.0.0", docs_url="/api/openapi", lifespan=lifespan)
+    app = FastAPI(
+        title="UGC service",
+        version="1.0.0",
+        docs_url="/api/openapi",
+        lifespan=lifespan_context,
+    )
 
     @app.get("/health")
     async def health() -> dict[str, str]:
