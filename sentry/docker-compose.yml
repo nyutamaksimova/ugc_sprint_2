@@ -1,0 +1,56 @@
+services:
+  sentry-api:
+    image: sentry:9.1.2
+    env_file: .env
+    command: run web
+    depends_on:
+      db-sentry: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    ports: ["9000:9000"]
+    volumes: ["sentry-data:/var/lib/sentry/files"]
+
+  sentry-worker:
+    image: sentry:9.1.2
+    env_file: .env
+    command: run worker
+    depends_on:
+      db-sentry: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    volumes: ["sentry-data:/var/lib/sentry/files"]
+
+  sentry-cron:
+    image: sentry:9.1.2
+    env_file: .env
+    command: run cron
+    depends_on:
+      db-sentry: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    volumes: ["sentry-data:/var/lib/sentry/files"]
+
+  db-sentry:
+    image: postgres:9.6
+    environment:
+      POSTGRES_USER: sentry
+      POSTGRES_PASSWORD: sentry
+      POSTGRES_DB: sentry
+    volumes: ["sentry-postgres:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sentry -d sentry"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:5-alpine
+    command: redis-server --appendonly yes
+    volumes: ["sentry-redis:/data"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  sentry-data:
+  sentry-postgres:
+  sentry-redis:

@@ -1,0 +1,32 @@
+{
+  "ratings_by_user": {
+    "count": 1000,
+    "mean_ms": 1.112,
+    "p50_ms": 1.0289,
+    "p95_ms": 1.4192,
+    "p99_ms": 2.2375
+  },
+  "rating_summary": {
+    "count": 1000,
+    "mean_ms": 1.032,
+    "p50_ms": 0.9855,
+    "p95_ms": 1.3497,
+    "p99_ms": 2.1093
+  },
+  "bookmarks_by_user": {
+    "count": 1000,
+    "mean_ms": 0.949,
+    "p50_ms": 0.9207,
+    "p95_ms": 1.1419,
+    "p99_ms": 1.4251
+  },
+  "reviews_by_film": {
+    "count": 1000,
+    "mean_ms": 1.004,
+    "p50_ms": 0.9666,
+    "p95_ms": 1.2745,
+    "p99_ms": 1.6861
+  },
+  "target": "postgres",
+  "cache_condition": "warm"
+}

@@ -1,0 +1,3 @@
+queue.type: persisted
+path.queue: /usr/share/logstash/data/queue
+pipeline.workers: 2

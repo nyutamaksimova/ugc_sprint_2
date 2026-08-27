@@ -1,0 +1,11 @@
+CREATE TABLE ratings (user_id uuid NOT NULL, film_id uuid NOT NULL, score smallint NOT NULL CHECK (score BETWEEN 0 AND 10), created_at timestamptz NOT NULL);
+CREATE TABLE rating_summaries (film_id uuid PRIMARY KEY, score_count bigint NOT NULL, score_sum bigint NOT NULL, likes_count bigint NOT NULL, dislikes_count bigint NOT NULL);
+CREATE TABLE bookmarks (user_id uuid NOT NULL, film_id uuid NOT NULL, created_at timestamptz NOT NULL);
+CREATE TABLE reviews (id uuid PRIMARY KEY, user_id uuid NOT NULL, film_id uuid NOT NULL, text text NOT NULL, author_score smallint NOT NULL CHECK (author_score BETWEEN 0 AND 10), vote_score integer NOT NULL, created_at timestamptz NOT NULL);
+CREATE TABLE review_votes (user_id uuid NOT NULL, review_id uuid NOT NULL, value smallint NOT NULL CHECK (value IN (-1, 1)), created_at timestamptz NOT NULL);
+CREATE INDEX ratings_user_created_idx ON ratings (user_id, created_at DESC);
+CREATE INDEX ratings_film_idx ON ratings (film_id);
+CREATE INDEX bookmarks_user_created_idx ON bookmarks (user_id, created_at DESC);
+CREATE INDEX reviews_film_created_idx ON reviews (film_id, created_at DESC, id);
+CREATE INDEX reviews_film_score_idx ON reviews (film_id, author_score DESC, id);
+CREATE INDEX reviews_film_votes_idx ON reviews (film_id, vote_score DESC, id);
