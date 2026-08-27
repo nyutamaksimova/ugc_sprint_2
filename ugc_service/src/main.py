@@ -2,11 +2,10 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from motor.motor_asyncio import AsyncIOMotorClient
-
 from src.api.v1.ratings import router as ratings_router
 from src.api.v1.ugc import router as ugc_router
-from src.db.mongo import ensure_indexes
 from src.core.sentry import init_sentry
+from src.db.mongo import ensure_indexes
 
 
 @asynccontextmanager
