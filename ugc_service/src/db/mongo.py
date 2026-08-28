@@ -16,6 +16,10 @@ async def ensure_indexes(database) -> None:
     await database.bookmarks.create_index(
         [("user_id", ASCENDING), ("created_at", DESCENDING)], name="bookmarks_user_created"
     )
+    await database.bookmarks.create_index(
+        [("user_id", ASCENDING), ("created_at", DESCENDING), ("film_id", ASCENDING)],
+        name="bookmarks_user_created_film",
+    )
     await database.reviews.create_index(
         [("film_id", ASCENDING), ("created_at", DESCENDING), ("_id", ASCENDING)],
         name="reviews_film_created",
@@ -23,6 +27,10 @@ async def ensure_indexes(database) -> None:
     await database.reviews.create_index(
         [("film_id", ASCENDING), ("vote_score", DESCENDING), ("_id", ASCENDING)],
         name="reviews_film_votes",
+    )
+    await database.reviews.create_index(
+        [("film_id", ASCENDING), ("author_score", DESCENDING), ("_id", ASCENDING)],
+        name="reviews_film_author_score",
     )
     await database.review_votes.create_index(
         [("user_id", ASCENDING), ("review_id", ASCENDING)],

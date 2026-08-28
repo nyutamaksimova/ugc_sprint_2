@@ -26,3 +26,14 @@ def test_ensure_indexes_creates_unique_rating_relation():
         [("user_id", 1), ("film_id", 1)],
         {"unique": True, "name": "rating_user_film"},
     ) in database.ratings.calls
+
+
+def test_ensure_indexes_creates_review_author_score_index():
+    database = FakeDatabase()
+
+    asyncio.run(ensure_indexes(database))
+
+    assert (
+        [("film_id", 1), ("author_score", -1), ("_id", 1)],
+        {"name": "reviews_film_author_score"},
+    ) in database.reviews.calls

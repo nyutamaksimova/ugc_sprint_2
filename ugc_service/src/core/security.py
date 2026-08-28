@@ -7,7 +7,13 @@ from jose import JWTError, jwt
 
 def decode_user_id(token: str, secret: str, algorithm: str) -> UUID:
     try:
-        return UUID(jwt.decode(token, secret, algorithms=[algorithm])["sub"])
+        payload = jwt.decode(
+            token,
+            secret,
+            algorithms=[algorithm],
+            options={"require_exp": True, "require_sub": True},
+        )
+        return UUID(payload["sub"])
     except (JWTError, KeyError, ValueError) as error:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"

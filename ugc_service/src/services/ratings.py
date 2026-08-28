@@ -14,16 +14,26 @@ def _delta(score: int, factor: int = 1) -> dict[str, int]:
 
 
 class RatingService:
-    def __init__(self, database):
+    def __init__(self, database, mongo_client):
         self.database = database
+        self.mongo_client = mongo_client
 
     async def put(self, user_id: UUID, film_id: UUID, score: int) -> dict:
+        async with await self.mongo_client.start_session() as session:
+            return await session.with_transaction(
+                lambda transaction_session: self._put_in_transaction(
+                    transaction_session, user_id, film_id, score
+                )
+            )
+
+    async def _put_in_transaction(self, session, user_id: UUID, film_id: UUID, score: int) -> dict:
         now = datetime.now(timezone.utc)
         previous = await self.database.ratings.find_one_and_update(
             {"user_id": str(user_id), "film_id": str(film_id)},
             {"$set": {"score": score, "updated_at": now}, "$setOnInsert": {"created_at": now}},
             upsert=True,
             return_document=ReturnDocument.BEFORE,
+            session=session,
         )
         change = _delta(score)
         if previous:
@@ -34,6 +44,7 @@ class RatingService:
             {"$inc": change, "$setOnInsert": {"film_id": str(film_id)}},
             upsert=True,
             return_document=ReturnDocument.AFTER,
+            session=session,
         )
         return self._present(summary)
 
@@ -44,13 +55,23 @@ class RatingService:
         )
 
     async def delete(self, user_id: UUID, film_id: UUID) -> bool:
+        async with await self.mongo_client.start_session() as session:
+            return await session.with_transaction(
+                lambda transaction_session: self._delete_in_transaction(
+                    transaction_session, user_id, film_id
+                )
+            )
+
+    async def _delete_in_transaction(self, session, user_id: UUID, film_id: UUID) -> bool:
         rating = await self.database.ratings.find_one_and_delete(
-            {"user_id": str(user_id), "film_id": str(film_id)}
+            {"user_id": str(user_id), "film_id": str(film_id)}, session=session
         )
         if rating is None:
             return False
         await self.database.rating_summaries.update_one(
-            {"film_id": str(film_id)}, {"$inc": _delta(rating["score"], -1)}
+            {"film_id": str(film_id)},
+            {"$inc": _delta(rating["score"], -1)},
+            session=session,
         )
         return True
 

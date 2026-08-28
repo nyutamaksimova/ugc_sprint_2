@@ -1,16 +1,16 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 
 from src.api.v1.ratings import user_id
 from src.models.schemas import ReviewCreate, ReviewUpdate, VoteWrite
 from src.services.ugc import UgcService
 
-router = APIRouter(tags=["ugc"])
+router = APIRouter(tags=["ugc"], dependencies=[Depends(user_id)])
 
 
 def service(request: Request):
-    return UgcService(request.app.state.database)
+    return UgcService(request.app.state.database, request.app.state.mongo_client)
 
 
 @router.put("/users/me/bookmarks/{film_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -29,8 +29,16 @@ async def delete_bookmark(
 
 
 @router.get("/users/me/bookmarks")
-async def bookmarks(user: UUID = Depends(user_id), ugc: UgcService = Depends(service)):
-    return await ugc.bookmarks(user)
+async def bookmarks(
+    limit: int = Query(20, ge=1, le=100),
+    cursor: str | None = None,
+    user: UUID = Depends(user_id),
+    ugc: UgcService = Depends(service),
+):
+    try:
+        return await ugc.bookmarks(user, limit, cursor)
+    except ValueError:
+        raise HTTPException(422, "Invalid cursor")
 
 
 @router.post("/films/{film_id}/reviews", status_code=status.HTTP_201_CREATED)
@@ -45,10 +53,14 @@ async def create_review(
 
 @router.get("/films/{film_id}/reviews")
 async def reviews(
-    film_id: UUID, sort: str = "created_at", limit: int = 20, ugc: UgcService = Depends(service)
+    film_id: UUID,
+    sort: str = "created_at",
+    limit: int = Query(20, ge=1, le=100),
+    cursor: str | None = None,
+    ugc: UgcService = Depends(service),
 ):
     try:
-        return await ugc.list_reviews(film_id, sort, min(limit, 100))
+        return await ugc.list_reviews(film_id, sort, limit, cursor)
     except ValueError:
         raise HTTPException(422, "Unsupported sort")
 

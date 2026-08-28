@@ -18,7 +18,7 @@ services:
       - --host
       - mongo:27017
       - --eval
-      - "rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'mongo:27017'}]})"
+      - "try { rs.status().ok } catch (error) { rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'mongo:27017'}]}).ok }"
   api:
     build: .
     env_file: .env

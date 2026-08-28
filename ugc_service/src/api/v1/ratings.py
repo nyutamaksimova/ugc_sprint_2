@@ -8,15 +8,16 @@ from src.core.security import bearer_scheme, current_user
 from src.models.schemas import RatingWrite
 from src.services.ratings import RatingService
 
-router = APIRouter(tags=["ratings"])
-
 
 def user_id(credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)) -> UUID:
     return current_user(credentials, settings.jwt_secret, settings.jwt_algorithm)
 
 
+router = APIRouter(tags=["ratings"], dependencies=[Depends(user_id)])
+
+
 def service(request: Request) -> RatingService:
-    return RatingService(request.app.state.database)
+    return RatingService(request.app.state.database, request.app.state.mongo_client)
 
 
 @router.put("/films/{film_id}/ratings/me")

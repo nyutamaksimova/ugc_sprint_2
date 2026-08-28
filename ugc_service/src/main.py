@@ -1,7 +1,9 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo.errors import PyMongoError
 
 from src.api.v1.ratings import router as ratings_router
 from src.api.v1.ugc import router as ugc_router
@@ -31,6 +33,10 @@ def create_app(*, lifespan_context=lifespan) -> FastAPI:
         docs_url="/api/openapi",
         lifespan=lifespan_context,
     )
+
+    @app.exception_handler(PyMongoError)
+    async def mongo_error_handler(_, __):
+        return JSONResponse(status_code=503, content={"detail": "Database unavailable"})
 
     @app.get("/health")
     async def health() -> dict[str, str]:
